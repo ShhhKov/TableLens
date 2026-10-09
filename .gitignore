@@ -1,0 +1,13 @@
+# Portable runtime and packaged release archives are generated locally.
+runtime/
+packages/
+
+# Per-user data and Python bytecode must stay out of the source repository.
+workspace/
+__pycache__/
+*.py[cod]
+
+# Launchers for platforms that are not supported yet.
+Launch.cmd
+Launch.command
+

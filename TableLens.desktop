@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=TableLens
+Comment=Edit tables. Verify sources.
+Terminal=true
+Icon=accessories-text-editor
+Categories=Office;
+Exec=/bin/sh -c "launcher=\"\$1\"; case \"\$launcher\" in file://*) launcher=\"\${launcher#file://}\";; esac; exec \"\$(dirname \"\$launcher\")/Launch.sh\"" sh %k
