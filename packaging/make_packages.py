@@ -38,17 +38,19 @@ def main():
                 relative = path.relative_to(ROOT)
                 if relative.parts[0] in ('packages', 'workspace', 'packaging', '__pycache__'):
                     continue
+                if relative.name in ('Launch.cmd', 'Launch.command'):
+                    continue
                 if '__pycache__' in relative.parts or path.suffix=='.pyc':
                     continue
                 if relative.parts[0]=='runtime' and len(relative.parts)>1 and relative.parts[1] not in runtimes:
                     continue
                 if path.is_symlink():
-                    info = zipfile.ZipInfo(str(Path('Universal editor')/relative))
+                    info = zipfile.ZipInfo(str(Path('TableLens')/relative))
                     info.create_system = 3
                     info.external_attr = (stat.S_IFLNK | 0o777) << 16
                     archive.writestr(info, os.readlink(path))
                 elif path.is_file():
-                    archive.write(path, Path('Universal editor')/relative)
+                    archive.write(path, Path('TableLens')/relative)
         print(archive_path.name, archive_path.stat().st_size//1_000_000, 'MB', flush=True)
 
 
