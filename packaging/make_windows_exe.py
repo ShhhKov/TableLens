@@ -16,6 +16,9 @@ def build_command():
                '--paths', str(ROOT), '--paths', str(ROOT / 'libraries')]
     for package in ['openpyxl', 'xlrd', 'pyxlsb', 'et_xmlfile']:
         command.extend(['--collect-all', package])
+    # Source requests use pip's certificate bundle when it is available.
+    # PyInstaller detects the Python import but needs the PEM file explicitly.
+    command.extend(['--collect-data', 'pip._vendor.certifi'])
     for source, destination in [('editor.html', '.'), ('source_bridge.js', '.'),
                                 ('assets', 'assets'), ('README.md', '.'),
                                 ('BUNDLE_MANIFEST.json', '.')]:
