@@ -14,6 +14,7 @@ import sys
 import tempfile
 import time
 from urllib.parse import parse_qs, urlsplit
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,7 +26,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', action='store_true')
     args = parser.parse_args()
-    with tempfile.TemporaryDirectory(prefix='TableLens EXE test ') as temporary:
+    with tempfile.TemporaryDirectory(prefix='TableLens EXE test ', ignore_cleanup_errors=True) as temporary:
         folder = Path(temporary)
         appdata = folder / 'LocalAppData'
         log = appdata / 'TableLens' / 'TableLens.log'
@@ -59,8 +60,11 @@ def main():
             url = address.split('/?')[0] + '/api/' + action
             request = Request(url, data=json.dumps(data or {}).encode(),
                               headers={'Content-Type': 'application/json', 'X-Editor-Token': token})
-            with urlopen(request, timeout=20) as response:
-                return json.load(response)
+            try:
+                with urlopen(request, timeout=20) as response:
+                    return json.load(response)
+            except HTTPError as error:
+                raise RuntimeError(action + ': ' + error.read().decode('utf-8', errors='replace')) from error
 
         def stop(address):
             nonlocal process, output
@@ -112,7 +116,15 @@ def main():
             print('Resources, themes/languages, TSV/XLSX editing, source preview, persistent data and shutdown: OK')
         finally:
             if process is not None:
-                process.terminate()
+                # Shut down the app, including the child process in a one-file EXE.
+                try:
+                    api(address, 'shutdown')
+                except Exception:
+                    if sys.platform == 'win32' and not args.source:
+                        subprocess.run(['taskkill', '/PID', str(process.pid), '/T', '/F'],
+                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    else:
+                        process.terminate()
                 process.wait(timeout=20)
             if output:
                 output.close()
