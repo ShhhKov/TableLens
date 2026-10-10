@@ -9,10 +9,13 @@ import copy
 import hashlib
 import io
 import json
+import locale
 import os
+import plistlib
 from pathlib import Path
 import re
 import secrets
+import subprocess
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from functools import lru_cache
 import tempfile
@@ -30,6 +33,83 @@ from source_preview import SourcePreview
 
 URL = re.compile(r'https?://[^\s<>"|]+', re.IGNORECASE)
 ACTIONS = ('approve', 'reject', 'rewiev')
+
+
+def mac_preferences():
+    """Read the current global macOS preferences without changing them."""
+    try:
+        result = subprocess.run(['/usr/bin/defaults', 'export', 'NSGlobalDomain', '-'],
+                                capture_output=True, timeout=2, check=True)
+        preferences = plistlib.loads(result.stdout)
+        return preferences if isinstance(preferences, dict) else {}
+    except (OSError, subprocess.SubprocessError, ValueError, plistlib.InvalidFileException):
+        return {}
+
+
+def system_language():
+    """Use the device UI language; languages other than Russian use English."""
+    if sys.platform == 'win32':
+        import ctypes
+        try:
+            language_id = ctypes.windll.kernel32.GetUserDefaultUILanguage()
+            if language_id:
+                return 'ru' if language_id & 0x3ff == 0x19 else 'en'
+        except (OSError, AttributeError):
+            pass
+    elif sys.platform == 'darwin':
+        languages = mac_preferences().get('AppleLanguages', [])
+        if isinstance(languages, list) and languages and isinstance(languages[0], str):
+            return 'ru' if re.match(r'^ru(?:[-_]|$)', languages[0], re.IGNORECASE) else 'en'
+    selected = (os.environ.get('LC_ALL') or os.environ.get('LC_MESSAGES')
+                or os.environ.get('LANG') or locale.getlocale()[0] or '')
+    # LANGUAGE can override the message locale, except in the C/POSIX locale.
+    if selected.split('.')[0].upper() not in ('C', 'POSIX'):
+        selected = os.environ.get('LANGUAGE', '').split(':')[0] or selected
+    return 'ru' if re.match(r'^ru(?:[_\-.]|$)', selected, re.IGNORECASE) else 'en'
+
+
+def system_theme():
+    """Read desktop preferences; let the browser decide if unavailable."""
+    if sys.platform == 'win32':
+        try:
+            import winreg
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                                r'Software\Microsoft\Windows\CurrentVersion\Themes\Personalize') as key:
+                value, _ = winreg.QueryValueEx(key, 'AppsUseLightTheme')
+                return 'dark' if value == 0 else 'light'
+        except (ImportError, OSError):
+            return 'auto'
+    if sys.platform == 'darwin':
+        preferences = mac_preferences()
+        if preferences:
+            return 'dark' if preferences.get('AppleInterfaceStyle') == 'Dark' else 'light'
+        return 'auto'
+    if not sys.platform.startswith('linux'):
+        return 'auto'
+    desktop = os.environ.get('XDG_CURRENT_DESKTOP', '').lower()
+    if 'kde' in desktop:
+        import configparser
+        config = configparser.ConfigParser(interpolation=None, strict=False)
+        try:
+            config.read(Path(os.environ.get('XDG_CONFIG_HOME') or Path.home() / '.config') / 'kdeglobals')
+            scheme = config.get('General', 'ColorScheme', fallback='')
+            if scheme:
+                return 'dark' if 'dark' in scheme.lower() else 'light'
+        except (OSError, configparser.Error):
+            pass
+    for key in ('color-scheme', 'gtk-theme'):
+        try:
+            result = subprocess.run(
+                ['gsettings', 'get', 'org.gnome.desktop.interface', key],
+                capture_output=True, text=True, timeout=2, check=True)
+            value = result.stdout.strip().strip("'\"").lower()
+            if key == 'color-scheme' and value in ('prefer-dark', 'prefer-light'):
+                return value.removeprefix('prefer-')
+            if key == 'gtk-theme' and 'dark' in value:
+                return 'dark'
+        except (OSError, subprocess.SubprocessError):
+            pass
+    return 'auto'
 
 
 class Editor:
@@ -441,7 +521,9 @@ def main():
     editor = None
     document_id = None
     token = secrets.token_urlsafe(32)
-    html = (folder / 'editor.html').read_text(encoding='utf-8').replace('__TOKEN__', token)
+    html = ((folder / 'editor.html').read_text(encoding='utf-8')
+            .replace('__TOKEN__', token).replace('__SYSTEM_LANGUAGE__', system_language())
+            .replace('__SYSTEM_THEME__', system_theme()))
     editor_lock = threading.RLock()
     preview = SourcePreview()
 

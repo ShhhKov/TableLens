@@ -7,7 +7,3 @@ workspace/
 __pycache__/
 *.py[cod]
 
-# Launchers for platforms that are not supported yet.
-Launch.cmd
-Launch.command
-

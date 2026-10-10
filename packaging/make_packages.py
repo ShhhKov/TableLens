@@ -6,7 +6,9 @@ from pathlib import Path
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKAGES = {'Linux': ('linux-x64', 'linux-arm64')}
+PACKAGES = {'Linux': ('linux-x64', 'linux-arm64'),
+            'Windows': ('windows-x64',),
+            'macOS': ('macos-x64', 'macos-arm64')}
 
 
 def make_desktop():
@@ -32,13 +34,20 @@ def main():
     for platform, runtimes in PACKAGES.items():
         if args.platform and platform != args.platform:
             continue
+        for runtime in runtimes:
+            executable = 'python.exe' if platform == 'Windows' else 'bin/python3'
+            if not (ROOT / 'runtime' / runtime / 'python' / executable).is_file():
+                raise RuntimeError('Bundled Python is missing: ' + runtime)
         archive_path = packages/f'TableLens-{platform}.zip'
         with zipfile.ZipFile(archive_path, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
             for path in ROOT.rglob('*'):
                 relative = path.relative_to(ROOT)
-                if relative.parts[0] in ('packages', 'workspace', 'packaging', '__pycache__'):
+                if relative.parts[0] in ('packages', 'workspace', 'packaging', '__pycache__', '.git', '.agents', '.codex', '.aws'):
                     continue
-                if relative.name in ('Launch.cmd', 'Launch.command'):
+                launchers = {'Launch.cmd', 'Launch.command', 'Launch.sh', 'TableLens.desktop'}
+                included = {'Linux': {'Launch.sh', 'TableLens.desktop'},
+                            'Windows': {'Launch.cmd'}, 'macOS': {'Launch.command', 'Launch.sh'}}
+                if relative.name in launchers and relative.name not in included[platform]:
                     continue
                 if '__pycache__' in relative.parts or path.suffix=='.pyc':
                     continue
