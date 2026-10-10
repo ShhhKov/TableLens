@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from editor import mac_preferences, system_language, system_theme
+from editor import default_storage_dir, mac_preferences, system_language, system_theme
 
 
 def check_settings():
@@ -72,6 +72,19 @@ def check_launchers():
     print('Linux/macOS launchers, both architectures and paths with spaces: OK')
 
 
+def check_storage():
+    with tempfile.TemporaryDirectory() as temporary:
+        with patch('editor.sys.platform', 'win32'), patch.object(sys, 'frozen', True, create=True):
+            with patch.dict(os.environ, {'LOCALAPPDATA': temporary}):
+                assert default_storage_dir() == Path(temporary) / 'TableLens' / 'workspace'
+            with patch.dict(os.environ, {}, clear=True):
+                assert default_storage_dir() == Path.home() / 'AppData' / 'Local' / 'TableLens' / 'workspace'
+        with patch.object(sys, 'frozen', False, create=True):
+            assert default_storage_dir() == ROOT / 'workspace'
+    print('EXE uses persistent user storage; source runs keep their workspace: OK')
+
+
 if __name__ == '__main__':
     check_settings()
     check_launchers()
+    check_storage()

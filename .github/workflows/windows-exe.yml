@@ -1,0 +1,43 @@
+name: Windows EXE
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - editor.py
+      - editor.html
+      - source_preview.py
+      - source_bridge.js
+      - table_formats.py
+      - libraries/**
+      - assets/**
+      - README.md
+      - BUNDLE_MANIFEST.json
+      - packaging/*windows*
+      - .github/workflows/windows-exe.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          architecture: x64
+      - name: Install build tool
+        run: python -m pip install -r packaging/windows-build-requirements.txt
+      - name: Build single executable
+        run: python -B packaging/make_windows_exe.py
+      - name: Verify executable and persistent data
+        run: python -B packaging/verify_windows_exe.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TableLens-Windows-exe
+          path: packages/TableLens.exe
+          if-no-files-found: error

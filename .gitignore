@@ -1,6 +1,9 @@
 # Portable runtime and packaged release archives are generated locally.
 runtime/
 packages/
+build/
+dist/
+*.spec
 
 # Per-user data and Python bytecode must stay out of the source repository.
 workspace/

@@ -499,6 +499,16 @@ def fetch_source(url):
         return {'kind': 'text' if mime == 'text/plain' else 'html', 'html': content, 'url': final_url}, 'application/json; charset=utf-8'
 
 
+def default_storage_dir():
+    if getattr(sys, 'frozen', False):
+        if sys.platform == 'win32':
+            base = Path(os.environ.get('LOCALAPPDATA') or Path.home() / 'AppData' / 'Local')
+        else:
+            base = Path.home() / '.local' / 'share'
+        return base / 'TableLens' / 'workspace'
+    return Path(__file__).resolve().parent / 'workspace'
+
+
 def main():
     parser = argparse.ArgumentParser(description='TableLens: таблицы и источники')
     parser.add_argument('file', nargs='?', type=Path)
@@ -507,7 +517,7 @@ def main():
     parser.add_argument('--storage-dir', type=Path, help='Папка для копий и результатов')
     args = parser.parse_args()
     folder = Path(__file__).resolve().parent
-    storage = args.storage_dir or folder / 'workspace'
+    storage = args.storage_dir or default_storage_dir()
     storage.mkdir(parents=True, exist_ok=True)
     documents = {}
     for metadata_path in storage.glob('*/document.json'):

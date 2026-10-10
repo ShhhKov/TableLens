@@ -1,85 +1,107 @@
 # TableLens
 
-Редактор табличных файлов со ссылками для Linux, Windows и macOS. В готовую сборку включены Python 3.13 и библиотеки; устанавливать Python, Excel или LibreOffice для запуска не требуется. Поддерживаются Linux x64/ARM64, Windows x64 и macOS Intel/Apple Silicon.
+A spreadsheet editor for reviewing rows and checking linked sources on Linux, Windows, and macOS. Portable packages include Python 3.13 and the required libraries: users do not need to install Python, Excel, or LibreOffice. Supported platforms: Linux x64/ARM64, Windows x64, and macOS Intel/Apple Silicon.
 
-## Сборка из исходников
+## Build from source
 
-Для сборки нужны Python 3.13 и доступ в интернет. Архивы всех платформ можно собрать на Linux. Выполните из каталога проекта:
+You need Python 3.13 and internet access to prepare the portable packages. Archives for all platforms can be built on Linux. Run these commands from the project directory:
 
 ```sh
 python3 packaging/download_runtimes.py
 python3 packaging/make_packages.py
 ```
 
-Сборки появятся в `packages/TableLens-Linux.zip`, `packages/TableLens-Windows.zip` и `packages/TableLens-macOS.zip`. Для сборки одной платформы укажите `--platform Linux`, `--platform Windows` или `--platform macOS`. Папки `runtime`, `packages` и `workspace` не входят в Git: runtime и архив создаются командами выше, а `workspace` хранит пользовательские файлы и прогресс.
+The output files are `packages/TableLens-Linux.zip`, `packages/TableLens-Windows.zip`, and `packages/TableLens-macOS.zip`. To build only one platform, pass `--platform Linux`, `--platform Windows`, or `--platform macOS`.
 
-## Запуск двойным нажатием
+The `runtime`, `packages`, and `workspace` directories are excluded from Git. The first two contain generated runtimes and release archives; `workspace` contains user files and progress.
 
-Сначала распакуйте всю папку приложения в доступную для записи папку. Не запускайте файлы прямо из ZIP. `runtime`, `libraries`, `assets` и файлы приложения должны оставаться вместе.
+## Launch a portable package
 
-| Система | Файл для запуска |
+Extract the entire application folder into a writable location. Do not launch files directly from the ZIP archive. Keep `runtime`, `libraries`, `assets`, and the application files together.
+
+| Platform | Launcher |
 | --- | --- |
 | Linux x64 / ARM64 | `TableLens.desktop` |
 | Windows x64 | `Launch.cmd` |
 | macOS Intel / Apple Silicon | `Launch.command` |
 
-Linux может попросить разрешить запуск `.desktop` как программы. Если файловый менеджер показывает его текст, выберите «Выполнить» для `Launch.sh`.
+On Linux, your file manager may ask you to allow the `.desktop` file to run as a program. If it opens as text, run `Launch.sh` instead.
 
-Поддерживаются современные 64-битные Linux с glibc, Windows x64 и macOS на Intel и Apple Silicon. Alpine/musl, 32-битные ОС, Windows ARM64, Android и iOS пока не поддерживаются. На macOS запуск также доступен через `sh Launch.command` из терминала в папке приложения.
+Supported systems include modern 64-bit Linux distributions using glibc, Windows x64, and macOS on Intel and Apple Silicon. Alpine/musl, 32-bit systems, Windows ARM64, Android, and iOS are not currently supported. On macOS, you can also run `sh Launch.command` from a terminal in the application folder.
 
-Приложение открывается в обычном браузере. Терминал оставляйте открытым. **Закрыть приложение** останавливает сервер; также можно нажать Ctrl+C в терминале.
+The application opens in your browser. Keep the terminal window open while using a portable package. The close button in the application header stops the server; Ctrl+C in the terminal also stops it.
 
-## Язык интерфейса
+## Windows: a single EXE file
 
-Доступны русский и английский интерфейсы. При запуске используется язык интерфейса устройства: русский для русской локали, английский для английской и всех остальных. Круглая кнопка рядом с закрытием приложения показывает язык, на который можно переключиться: **En** в русском интерфейсе и **Рус** в английском. Такая же кнопка доступна в окне открытия файла. Смена языка сохраняет введённые изменения и настройки колонок. Содержимое таблиц и названия файлов не переводятся.
+An additional Windows build packages Python, the libraries, the interface, and PDF viewing into one `TableLens.exe`. Users do not need to install Python or extract an application folder. Double-clicking the EXE opens the interface in the browser without a console window. The close button in the application header stops the process.
 
-Рядом с переключателем языка есть круглая кнопка смены темы: луна переключает на тёмную, солнце — на светлую. Она доступна в редакторе и окне открытия файла. При каждом запуске тема определяется по настройкам устройства (GNOME/GTK или KDE в Linux, тема приложений в Windows, оформление в macOS; при отсутствии настроек — по предпочтению браузера). Ручной выбор действует до следующего запуска и не меняет введённые данные.
+The EXE stores working files and progress in `%LOCALAPPDATA%\TableLens\workspace`, and startup diagnostics in `%LOCALAPPDATA%\TableLens\TableLens.log`. You can move or replace the EXE while keeping your data. Working files are stored separately from the executable and remain after the application closes.
 
-## Открытие и настройка
+Build on Windows x64 with Python 3.13:
 
-1. Выберите файл обычным диалогом браузера или из списка ранее открытых.
-2. Для книги выберите лист. Если заголовков нет, отключите «Первая строка — заголовки». Для текстового файла можно указать разделитель и кодировку.
-3. Для каждой колонки выберите **Редактировать**, **Только показывать** или **Скрыть**. Названия колонок произвольные; пустые и одинаковые заголовки допустимы.
-4. При необходимости включите проверку совпадений для нужных редактируемых колонок. Для выпадающего списка задайте варианты — по одному на строку.
-5. Выберите колонку с текстом для поиска в источнике и нажмите **Начать редактирование**.
+```powershell
+python -m pip install -r packaging/windows-build-requirements.txt
+python -B packaging/make_windows_exe.py
+python -B packaging/verify_windows_exe.py
+```
 
-Настройки сохраняются для файла и листа. Позднее их можно изменить кнопкой **Колонки**.
+The output is `packages/TableLens.exe`. The **Windows EXE** GitHub Actions workflow builds and tests the executable automatically after application changes are pushed to `main`. You can also start it manually with **Run workflow**. After a successful run, download **TableLens-Windows-exe** from that run's **Artifacts** section and extract `TableLens.exe`.
 
-## Форматы
+## Interface language and theme
 
-| Входной формат | Результат |
+The interface supports English and Russian. At startup, it uses the device's interface language: Russian for Russian locales, English for all others. The round language button next to the close button shows the language you can switch to: **En** in the Russian interface and **Рус** in the English interface. The same button is available in the file-opening dialog. Switching languages preserves unsaved edits and column settings. Table contents and filenames are never translated.
+
+A round theme button sits beside the language button. The moon switches to the dark theme; the sun switches to the light theme. It is available in both the editor and the file-opening dialog. Each launch starts with the device's theme: GNOME/GTK or KDE preferences on Linux, the app theme on Windows, and appearance preferences on macOS. Browser preferences are used when device settings are unavailable. A manual selection lasts until the next launch and preserves your edits.
+
+## Open a file and configure columns
+
+1. Choose a file using the browser's file picker or select a previously opened file.
+2. For a workbook, choose a sheet. If the file has no header row, clear **First row is a header**. For text files, you can select the delimiter and encoding.
+3. Set each column to **Edit**, **Read only**, or **Hide**. Column names are unrestricted; empty or duplicate headers are allowed.
+4. Enable matching-value review for editable columns where needed. To create a dropdown, enter the allowed values, one per line.
+5. Select the visible column used for source searches and click **Start editing**.
+
+Settings are saved per file and sheet. You can change them later using **Columns**.
+
+## File formats
+
+| Input | Output |
 | --- | --- |
-| TSV, CSV, TXT с разделителем | Тот же формат и исходная кодировка |
-| XLSX, XLSM | Тот же формат, включая другие листы |
-| ODS | ODS, включая другие листы |
-| XLS, XLSB | XLSX с данными всех листов |
+| TSV, CSV, delimited TXT | Same format and original encoding |
+| XLSX, XLSM | Same format, including other sheets |
+| ODS | ODS, including other sheets |
+| XLS, XLSB | XLSX containing data from all sheets |
 
-Для TXT: табуляция, запятая, `;` или `|`. Кодировки: UTF-8, Windows-1251, UTF-16, Latin-1. Автоопределение сначала пробует UTF-8, затем Windows-1251. Ограничения: файл до 50 МБ, лист до 100 000 строк и 1 000 колонок. Защищённые паролем книги не поддерживаются.
+TXT delimiters: tab, comma, `;`, or `|`. Encodings: UTF-8, Windows-1251, UTF-16, and Latin-1. Automatic detection tries UTF-8 first, then Windows-1251. Limits: 50 MB per file, 100,000 rows and 1,000 columns per sheet. Password-protected workbooks are not supported.
 
-При конвертации XLS/XLSB переносится содержимое листов; исходное оформление, формулы и макросы не восстанавливаются. В XLSX/XLSM сохраняются обычные стили, формулы, гиперссылки и VBA в XLSM, но некоторые нестандартные объекты Excel могут не переноситься. Для сложных книг проверяйте результат. [Документация openpyxl](https://openpyxl.readthedocs.io/en/stable/tutorial.html#saving-a-workbook).
+XLS/XLSB conversion transfers sheet contents; original formatting, formulas, and macros are not reconstructed. XLSX/XLSM retain common styles, formulas, hyperlinks, and VBA in XLSM, but some specialized Excel objects may not survive. Check the output when working with complex workbooks. See the [openpyxl documentation](https://openpyxl.readthedocs.io/en/stable/tutorial.html#saving-a-workbook).
 
-## Редактирование
+## Edit and review rows
 
-- **Подтвердить →** сохраняет строку и переходит дальше. **Сохранить** сохраняет без перехода, если нет цикла совпадений. Ctrl+Enter — подтверждение; Alt+↑/↓ — перемещение.
-- **Пропустить →** откладывает строку. Раздел **Пропущенные** содержит быстрые переходы; подтверждение снимает отметку пропуска.
-- После `;` в текстовых полях показан визуальный перенос. Он не записывается в файл; исходные пробелы и настоящие переносы сохраняются.
-- В отмеченных колонках изменение значения запускает последовательный просмотр других строк с дословным старым значением. **Применить** переносит предложение в поле; можно оставить прежнее значение и редактировать другие поля. Изменения каждой строки сохраняются отдельно, без массовой замены.
-- По завершении цикла редактор возвращается к следующей необработанной строке после исходной. Уже проверенные и отложенные строки обходятся при основном проходе. Вне цикла можно перейти к любому номеру вручную. Незаконченные циклы сохраняются между запусками.
+- The confirm button saves the row and moves forward. **Save** saves without moving forward unless a matching-value review is active. Keyboard shortcuts: Ctrl+Enter to confirm; Alt+↑/↓ to navigate.
+- **Skip** postpones a row. **Skipped** provides quick navigation to postponed rows. Confirming a row removes its skipped status.
+- Text fields display a visual line break after `;`. This is not written to the file; original spaces and actual line breaks are preserved.
+- Changing a value in a column marked for matching-value review starts a sequential review of other rows with exactly the same old value. **Apply** places the suggested value in the field. You can keep the previous value and edit other fields instead. Each row is saved separately; changes are not applied in bulk.
+- When the review ends, the editor returns to the next unprocessed row after the original row. The main pass skips rows already confirmed or postponed. Outside a review, you can jump to any row number. Unfinished reviews are restored between launches.
 
-## Просмотр источников
+## View sources
 
-Ссылки из видимых колонок, включая гиперссылки Excel/ODS, открываются справа. В полях для чтения URL заменяется словом **Ссылка**. Автопросмотр можно отключить.
+Links in visible columns, including Excel/ODS hyperlinks, open in the right pane. Read-only fields display URLs as **Link**. Automatic preview can be turned off.
 
-HTML открывается со стилями и скриптами через отдельный локальный адрес, изолированный от редактора. Раскрывающиеся блоки работают. Переходы остаются в правой панели; **Назад / Вперёд** управляют историей текущей записи.
+HTML pages retain styles and scripts and are served through a separate local address, isolated from the editor. Expandable sections work. Navigation stays in the right pane; the back and forward buttons track source history for the current row.
 
-Поиск берёт выбранную колонку (текст до первого `|`), не учитывает регистр и пробелы. Запрос можно изменить вручную. Совпадения подсвечиваются; первое прокручивается в видимую область. В PDF есть переходы по страницам и страницам с совпадениями. Масштаб: 50–300%. Границу панелей можно перетаскивать; её положение сохраняется. Двойное нажатие возвращает исходную ширину.
+Search uses the selected column's text before the first `|`, ignoring case and whitespace. You can edit the query manually. Matches are highlighted and the first match is scrolled into view. PDF controls navigate through pages and pages containing matches. Zoom ranges from 50% to 300%. Drag the divider to resize the panes; its position is saved. Double-click it to restore the default width.
 
-PDF без текстового слоя не поддерживают поиск. Сайты с авторизацией, защитой от автоматических запросов или сложными внешними службами могут работать частично; для них есть **В браузере ↗**. Источник ограничен 40 МБ. Формы с POST не отправляются через локальный просмотр.
+PDFs without a text layer cannot be searched. Sites requiring authentication, blocking automated requests, or depending on complex external services may work only partially; use **Open in browser ↗** for those sources. Source files are limited to 40 MB. POST forms are not submitted through the local preview.
 
-## Сохранение и перенос
+## Save and move your work
 
-Оригинал на компьютере не изменяется. Выбранный файл копируется в `workspace` внутри приложения. Результат сохраняется рядом с копией как `имя.edited.расширение`; **Скачать результат** позволяет сохранить его через браузер в другую папку.
+The original file on your computer is never modified. The selected file is copied into the application's `workspace` directory, or into `%LOCALAPPDATA%\TableLens\workspace` when using the Windows EXE. The result is saved beside that copy as `name.edited.extension`. **Download result** lets you save it to another folder through the browser.
 
-Повторный выбор того же исходного файла продолжает работу с сохранённым результатом. Другие листы книги входят в итоговый файл. Прогресс, пропуски и настройки хранятся отдельно. Если результат уже существовал перед сеансом, при первом сохранении создаётся `.bak`. Для переноса результатов и прогресса копируйте `workspace` вместе с приложением.
+Selecting the same original file again resumes work from the saved result. Other workbook sheets are included in the output. Progress, skipped rows, and settings are stored separately. If an output file existed before the session, the first save creates a `.bak` copy. To move your work, copy the `workspace` directory along with the portable application, or copy it between the EXE's data directories.
 
-Python: [Astral python-build-standalone](https://github.com/astral-sh/python-build-standalone). Версии, источники и SHA-256 указаны в `BUNDLE_MANIFEST.json`; лицензии сохранены внутри runtime и библиотек. PDF: [Mozilla PDF.js](https://mozilla.github.io/pdf.js/), лицензия `assets/PDFJS_LICENSE`.
+## Bundled components
+
+Python: [Astral python-build-standalone](https://github.com/astral-sh/python-build-standalone). Runtime and library versions, sources, and SHA-256 checksums are listed in `BUNDLE_MANIFEST.json`; licenses are preserved in the runtime and library directories. The EXE also includes the bundled library license files.
+
+PDF viewing: [Mozilla PDF.js](https://mozilla.github.io/pdf.js/), with its license in `assets/PDFJS_LICENSE`.
