@@ -86,13 +86,23 @@ XLS/XLSB conversion transfers sheet contents; original formatting, formulas, and
 
 ## View sources
 
+### Address bar and shared source
+
+The source pane has an address bar on Linux, Windows, and macOS. Enter an HTTP/HTTPS URL (or a website name, which uses HTTPS) and press Enter or the arrow button to open it, even when the table has no link column. The reload button fetches the page again; back and forward navigate source history. The address bar shows the final address after redirects.
+
+Use the pin button to keep the current HTML page or PDF while switching rows. Search updates using the new row's selected search column. Explicitly clicking a table link still opens that source. Unpinning resumes automatic preview when it is enabled. Opening another document or sheet clears the pin and source history. Pinning applies to the current session.
+
+The top row contains back/forward navigation, the address bar, reload, and pin. Zoom controls sit before the search field in the second row. If automatic search finds no matches, a prominent, dismissible notice explains that this does not mean the item is absent: the website may limit automatic search, so you should check the page manually. See [ROADMAP.md](ROADMAP.md) for the next stages.
+
+### Links and preview controls
+
 Links in visible columns, including Excel/ODS hyperlinks, open in the right pane. Read-only fields display URLs as **Link**. Automatic preview can be turned off.
 
 HTML pages retain styles and scripts and are served through a separate local address, isolated from the editor. Expandable sections work. Navigation stays in the right pane; the back and forward buttons track source history for the current row.
 
 Search uses the selected column's text before the first `|`, ignoring case and whitespace. You can edit the query manually. Matches are highlighted and the first match is scrolled into view. PDF controls navigate through pages and pages containing matches. Zoom ranges from 50% to 300%. Drag the divider to resize the panes; its position is saved. Double-click it to restore the default width.
 
-PDFs without a text layer cannot be searched. Sites requiring authentication, blocking automated requests, or depending on complex external services may work only partially; use **Open in browser ↗** for those sources. Source files are limited to 40 MB. POST forms are not submitted through the local preview.
+PDFs without a text layer cannot be searched. Sites requiring authentication, blocking automated requests, or depending on complex external services may work only partially. If needed, copy the address from the address bar and open it directly in your browser. Source files are limited to 40 MB. POST forms are not submitted through the local preview.
 
 ## Save and move your work
 

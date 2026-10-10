@@ -78,13 +78,17 @@ def main():
         try:
             address = start()
             html = urlopen(address).read().decode()
-            for resource in ['__TOKEN__', '__SYSTEM_LANGUAGE__', '__SYSTEM_THEME__']:
+            for resource in ['__TOKEN__', '__SYSTEM_LANGUAGE__', '__SYSTEM_THEME__', '__SOURCE_BROWSER_ENABLED__']:
                 assert resource not in html
             for element in ['theme-toggle', 'wizard-theme-toggle', 'language-toggle', 'wizard-language-toggle']:
                 assert 'id="' + element + '"' in html
             for asset in ['pdf.mjs', 'pdf.worker.mjs']:
                 url = address.replace('/?', '/assets/' + asset + '?')
                 assert len(urlopen(url).read()) > 1000
+            # A manually entered source works without a table or a row URL.
+            manual = api(address, 'browser-source', {'url': address})
+            assert manual['kind'] == 'interactive'
+            assert manual['bridge_key'].encode() in urlopen(manual['preview_url']).read()
             row = api(address, 'import', {'name': 'sample.tsv', 'content': base64.b64encode(b'Name\nFirst\n').decode()})
             values = list(row['values'])
             values[0] = 'Saved from EXE'

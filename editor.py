@@ -485,7 +485,7 @@ def fetch_source(url):
         final_url = response.geturl()
         mime = response.headers.get_content_type()
         if raw.startswith(b'%PDF-') or mime == 'application/pdf':
-            return raw, 'application/pdf'
+            return raw, 'application/pdf', final_url
         if mime not in ('text/html', 'application/xhtml+xml', 'text/plain'):
             raise ValueError('Этот формат не поддерживается для встроенного просмотра.')
         charset = response.headers.get_content_charset()
@@ -496,7 +496,8 @@ def fetch_source(url):
             content = raw.decode(charset)
         except (UnicodeError, LookupError):
             content = raw.decode('utf-8', errors='replace')
-        return {'kind': 'text' if mime == 'text/plain' else 'html', 'html': content, 'url': final_url}, 'application/json; charset=utf-8'
+        return ({'kind': 'text' if mime == 'text/plain' else 'html', 'html': content, 'url': final_url},
+                'application/json; charset=utf-8', final_url)
 
 
 def default_storage_dir():
@@ -507,6 +508,21 @@ def default_storage_dir():
             base = Path.home() / '.local' / 'share'
         return base / 'TableLens' / 'workspace'
     return Path(__file__).resolve().parent / 'workspace'
+
+
+def validate_browser_url(target):
+    if not isinstance(target, str) or len(target) > 8192:
+        raise ValueError('Введите корректный адрес HTTP или HTTPS.')
+    try:
+        parsed = urlsplit(target)
+        if (parsed.scheme not in ('http', 'https') or not parsed.hostname
+                or parsed.username is not None or parsed.password is not None
+                or any(character.isspace() for character in target)):
+            raise ValueError
+        parsed.port
+    except ValueError:
+        raise ValueError('Введите корректный адрес HTTP или HTTPS.') from None
+    return target
 
 
 def main():
@@ -533,7 +549,8 @@ def main():
     token = secrets.token_urlsafe(32)
     html = ((folder / 'editor.html').read_text(encoding='utf-8')
             .replace('__TOKEN__', token).replace('__SYSTEM_LANGUAGE__', system_language())
-            .replace('__SYSTEM_THEME__', system_theme()))
+            .replace('__SYSTEM_THEME__', system_theme())
+            .replace('__SOURCE_BROWSER_ENABLED__', 'true'))
     editor_lock = threading.RLock()
     preview = SourcePreview()
 
@@ -582,7 +599,7 @@ def main():
         def log_message(self, *args):
             pass
 
-        def respond(self, status, payload, content_type='application/json; charset=utf-8', filename=None):
+        def respond(self, status, payload, content_type='application/json; charset=utf-8', filename=None, source_url=None):
             raw = (payload if isinstance(payload, bytes) else payload.encode('utf-8')
                    if isinstance(payload, str) else json.dumps(payload, ensure_ascii=False).encode('utf-8'))
             self.send_response(status)
@@ -590,6 +607,8 @@ def main():
             self.send_header('Content-Length', str(len(raw)))
             self.send_header('Cache-Control', 'no-store')
             self.send_header('X-Content-Type-Options', 'nosniff')
+            if source_url:
+                self.send_header('Content-Location', quote(source_url, safe=":/?#[]@!$&'()*+,;=%"))
             if filename:
                 self.send_header('Content-Disposition', "attachment; filename*=UTF-8''"+quote(filename))
             self.end_headers()
@@ -627,18 +646,24 @@ def main():
                 if not 0 < length <= 75_000_000:
                     raise ValueError('Некорректный размер запроса. Максимальный размер файла 50 МБ.')
                 data = json.loads(self.rfile.read(length))
-                if self.path == '/api/source':
-                    with editor_lock:
-                        if editor is None:
-                            raise ValueError('Сначала выберите таблицу.')
-                        links = editor.view(data['index'])['links']
-                        target = data.get('url', links[0] if links else None)
-                        if target not in links and not preview.permits(target):
-                            raise ValueError('В строке нет такой ссылки.')
-                    result, mime = fetch_source(target)
+                if self.path in ('/api/source', '/api/browser-source'):
+                    if self.path == '/api/browser-source':
+                        target = validate_browser_url(data.get('url'))
+                    else:
+                        with editor_lock:
+                            if editor is None:
+                                raise ValueError('Сначала выберите таблицу.')
+                            links = editor.view(data['index'])['links']
+                            target = data.get('url', links[0] if links else None)
+                            if target not in links and not preview.permits(target):
+                                raise ValueError('В строке нет такой ссылки.')
+                    if data.get('reload') is True:
+                        fetch_source.cache_clear()
+                        preview.resource.cache_clear()
+                    result, mime, source_url = fetch_source(target)
                     if isinstance(result, dict):
                         result = preview.prepare(result)
-                    self.respond(200, result, mime)
+                    self.respond(200, result, mime, source_url=source_url)
                     return
                 with editor_lock:
                     self.editor_action(data)

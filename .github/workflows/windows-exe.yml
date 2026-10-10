@@ -41,3 +41,17 @@ jobs:
           name: TableLens-Windows-exe
           path: packages/TableLens.exe
           if-no-files-found: error
+
+  verify-macos:
+    name: Verify macOS application
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify macOS settings and launchers
+        run: python -B packaging/verify_platforms.py
+      - name: Verify source loading, editing and persistent data
+        run: python -B packaging/verify_windows_exe.py --source

@@ -41,10 +41,16 @@ main{grid-template-columns:minmax(0,var(--editor-width,44%)) 8px minmax(0,1fr)}#
 <div id="splitter" role="separator" aria-label="Ширина редактора" aria-orientation="vertical" tabindex="0" title="Перетащите границу. Двойное нажатие — исходная ширина."></div>
 <section id="viewer" aria-label="Просмотр источника">
 <div id="viewer-toolbar"><div class="zoom-controls"><button id="source-back" class="icon-button arrow-button" disabled aria-label="Назад по источникам" title="Назад по источникам"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H4m7-7-7 7 7 7"/></svg></button><button id="source-forward" class="icon-button arrow-button" disabled aria-label="Вперёд по источникам" title="Вперёд по источникам"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-7-7 7 7-7 7"/></svg></button><span>Масштаб</span><div class="zoom-group"><button id="zoom-out" class="flat-icon" aria-label="Уменьшить масштаб">−</button><select id="zoom" aria-label="Масштаб"><option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option><option value="3">300%</option></select><button id="zoom-in" class="flat-icon" aria-label="Увеличить масштаб">＋</button></div></div><button id="external" class="pill-button" disabled>Открыть в браузере ↗</button></div>
-<div class="search-group"><input id="viewer-find" aria-label="Найти в источнике" placeholder="Поиск текста выбранной колонки"><button id="find" class="primary icon-button" aria-label="Найти в источнике" title="Найти"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div>
+<form id="source-address-row" class="source-address-row" hidden>
+<div class="source-address-group"><input id="source-address" type="text" inputmode="url" autocomplete="off" spellcheck="false" aria-label="Адрес страницы" placeholder="Адрес страницы или сайта"><button id="source-go" class="flat-icon arrow-button" type="submit" aria-label="Открыть адрес" title="Открыть адрес"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-7-7 7 7-7 7"/></svg></button></div>
+<button id="source-reload" class="icon-button" type="button" disabled aria-label="Обновить страницу" title="Обновить страницу"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M20 12a8 8 0 1 0-2 5M20 7l-3 3"/></svg></button>
+<button id="source-pin" class="icon-button" type="button" disabled aria-pressed="false" aria-label="Закрепить страницу при смене строк" title="Закрепить страницу при смене строк"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8m-7 0v6l-3 4v2h12v-2l-3-4V3M12 15v7"/></svg></button>
+</form>
+<div id="viewer-search-row"><div class="search-group"><input id="viewer-find" aria-label="Найти в источнике" placeholder="Поиск текста выбранной колонки"><button id="find" class="primary icon-button" aria-label="Найти в источнике" title="Найти"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div>
+</div>
 <div id="viewer-status" role="status" aria-live="polite">Нажмите «Ссылка» в видимой колонке.</div>
 <div id="pdf-toolbar" class="bar" hidden><button id="pdf-prev">← Страница</button><span id="pdf-position"></span><button id="pdf-next">Страница →</button><button id="match-prev">← Совпадение</button><button id="match-next">Совпадение →</button></div>
-<div id="source-scroll"><iframe id="source-frame" sandbox="allow-scripts allow-forms allow-same-origin" referrerpolicy="no-referrer" title="Страница источника" hidden></iframe><div id="pdf-page" hidden><canvas id="pdf-canvas"></canvas><div id="pdf-highlights"></div></div></div>
+<div class="source-stage"><div id="viewer-notice" class="viewer-notice" role="status" aria-live="polite" hidden><div id="viewer-notice-content"><strong id="viewer-notice-title" hidden>Совпадений не найдено</strong><span id="viewer-notice-text"></span></div><button id="viewer-notice-close" class="icon-button close-button" type="button" aria-label="Закрыть сообщение" title="Закрыть сообщение">×</button></div><div id="source-scroll"><iframe id="source-frame" sandbox="allow-scripts allow-forms allow-same-origin" referrerpolicy="no-referrer" title="Страница источника" hidden></iframe><div id="pdf-page" hidden><canvas id="pdf-canvas"></canvas><div id="pdf-highlights"></div></div></div></div>
 </section>
 </main>
 <style>
@@ -67,8 +73,26 @@ button,select,input,textarea{color:var(--ink);font-family:inherit}button{border:
 .read-column{margin:0 0 8px}.read-column strong{font-size:11px;margin-bottom:3px;color:var(--muted)}#examples{margin:0 0 10px;line-height:1.35}#fields{gap:7px;margin:0 0 12px}.field{grid-template-columns:110px minmax(0,1fr);gap:6px}.field label{font-weight:700;padding-top:6px}.field textarea,.field select{border:1px solid var(--line);border-radius:18px;background:var(--control);width:100%;padding:5px 9px;font:13px/1.35 Arial,system-ui,sans-serif}.field textarea{resize:vertical;min-height:30px}.field select{height:31px}.field textarea:focus,.field select:focus{border-color:var(--teal);outline:2px solid var(--focus)}.edit-links{color:var(--teal)}
 #viewer-toolbar{display:flex;align-items:center;gap:12px;min-height:34px;margin:0 0 10px;padding:0 1px}.zoom-controls{display:flex;align-items:center;gap:10px;white-space:nowrap}.zoom-group{padding:0 1px}.zoom-group #zoom{border:0;background:transparent;width:67px;padding:2px 0;font-size:13px;font-weight:700;text-align:center}.zoom-group .flat-icon{padding:0 4px;min-width:25px}.zoom-controls .icon-button{width:33px;height:33px;font-size:23px}#viewer-status{flex:1;min-width:80px;text-align:center;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}#external{flex:none;padding:4px 13px}.search-group{display:flex;align-items:center;background:var(--control);border:1px solid var(--line);border-radius:20px;height:36px;padding:2px 3px 2px 11px;margin:0 0 16px}.search-group:focus-within{border-color:var(--teal)}#viewer-find{flex:1;min-width:0;border:0;background:transparent;padding:3px 0;outline:0;font-size:13px}#find{width:32px;height:32px;font-size:27px;font-weight:400}#source-scroll{border-radius:12px;overflow:auto;background:var(--control)}#pdf-toolbar{flex-wrap:wrap}
 #viewer-find{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}#viewer-find:focus{text-overflow:clip}
+.source-address-row{display:flex;align-items:center;gap:7px;margin:0 0 8px;flex-shrink:0}.source-address-group{display:flex;align-items:center;flex:1;min-width:0;background:var(--control);border:1px solid var(--line);border-radius:20px;height:35px;padding:2px 3px 2px 11px}.source-address-group:focus-within{border-color:var(--teal)}#source-address{width:100%;min-width:0;flex:1;border:0;background:transparent;padding:3px 0;outline:0;font-size:12px;text-overflow:ellipsis}#source-address:focus{text-overflow:clip}#source-go{width:29px;height:29px;min-width:29px}#source-pin[aria-pressed=true]{background:var(--teal);border-color:var(--teal);color:var(--surface)}
 .search-group{margin-bottom:4px}#viewer-status{flex:none;width:100%;min-height:14px;margin:0 0 10px;text-align:center;font-size:10px;line-height:1.3;letter-spacing:.03em;text-transform:uppercase}#external{margin-left:auto}
 @media(max-width:1250px){#viewer-toolbar{flex-wrap:wrap}.zoom-controls{flex:1}#external{margin-left:auto}}@media(max-width:700px){main{grid-template-columns:1fr;height:auto}#splitter{display:none}#editor{overflow:visible}#viewer{height:75vh}.editor-navigation{gap:6px}#skipped-panel{margin-bottom:12px}}
+.source-stage{display:contents}
+.source-browser #viewer-toolbar{flex-wrap:nowrap;gap:8px;margin-bottom:8px}
+.source-browser .zoom-controls{flex:none;gap:7px}
+.source-browser .source-address-row{flex:1;min-width:0;margin:0}
+.source-browser #viewer-search-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-shrink:0}
+.source-browser #viewer-search-row .zoom-group{flex:none}
+.source-browser #viewer-search-row .search-group{flex:1;min-width:0;margin:0}
+.source-browser .source-stage{display:block;position:relative;flex:1;min-height:0}
+.source-browser #source-scroll{height:100%;width:100%}
+.viewer-notice{position:absolute;top:12px;left:12px;right:12px;z-index:4;display:flex;align-items:center;gap:12px;margin-left:auto;max-width:440px;padding:10px 12px;background:var(--control);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 24px #0003;font-size:13px;line-height:1.4}
+#viewer-notice-content{flex:1;min-width:0;overflow-wrap:anywhere}#viewer-notice-text{display:block}
+.viewer-notice.no-match{max-width:500px;align-items:flex-start;padding:17px 18px;background:#fff0b3;color:#643800;border:2px solid #e8a217;box-shadow:0 10px 32px #0004;font-size:16px;line-height:1.5}
+#viewer-notice-title{display:block;margin:0 0 8px;font-size:23px;font-weight:800;line-height:1.2;color:#9c4700}
+:root[data-theme=dark] .viewer-notice.no-match{background:#513c14;color:#fff0c0;border-color:#ffbe40}
+:root[data-theme=dark] #viewer-notice-title{color:#ffd15c}
+#viewer-notice-close{width:27px;height:27px;font-size:22px}
+
 </style>
 <style>
 dialog{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 80px #18233745;padding:22px;font:13px/1.4 Arial,system-ui,sans-serif}
@@ -370,6 +394,17 @@ const translations={
  "Нельзя редактировать закрытую часть объединённой ячейки ODS.": "Cannot edit the covered part of a merged ODS cell."
 };
 Object.assign(translations,{
+ 'Совпадений не найдено':'No matches found',
+ 'Это не означает, что позиции нет на странице. Сайт может ограничивать автоматический поиск. Проверьте страницу и найдите нужную позицию вручную.':'This does not mean the item is missing from the page. The website may limit automatic search. Check the page and find the item manually.',
+ 'Закрыть сообщение':'Dismiss message',
+ 'Адрес страницы':'Page address',
+ 'Адрес страницы или сайта':'Page or website address',
+ 'Открыть адрес':'Open address',
+ 'Обновить страницу':'Reload page',
+ 'Закрепить страницу при смене строк':'Keep page when switching rows',
+ 'Открепить страницу и следовать ссылкам строк':'Unpin page and follow row links',
+ 'Введите корректный адрес HTTP или HTTPS.':'Enter a valid HTTP or HTTPS address.',
+ 'Открытие произвольного адреса пока доступно только в Linux.':'Opening a custom address is currently available only on Linux.',
  'Страница устарела. Откройте ссылку заново.':'This page has expired. Open the link again.',
  'Неизвестный ресурс.':'Unknown resource.',
  'Источник не выбран.':'No source selected.',
@@ -407,7 +442,16 @@ function columnLabel(data,column){
 }
 
 const token='__TOKEN__';
+const sourceBrowserEnabled='__SOURCE_BROWSER_ENABLED__'==='true';
 const $=id=>document.getElementById(id);
+$('source-address-row').hidden=!sourceBrowserEnabled;
+if(sourceBrowserEnabled){
+ document.body.classList.add('source-browser');
+ $('external').hidden=true;$('viewer-status').hidden=true;
+ document.querySelector('.zoom-controls > span').hidden=true;
+ $('viewer-toolbar').append($('source-address-row'));
+ $('viewer-search-row').prepend(document.querySelector('.zoom-group'));
+}
 const buttonHelp={
  'shutdown':t('Остановить приложение и закрыть редактор.'),
  'open-file':t('Выбрать новую таблицу или открыть ранее добавленную.'),
@@ -489,9 +533,19 @@ $('file-wizard').oncancel=event=>{event.preventDefault();if(state)$('wizard-clos
 function status(message,error=false){$('status').textContent=message;$('status').className=error?'error':'success';}
 async function api(action,data={}){const response=await fetch('/api/'+action,{method:'POST',headers:{'Content-Type':'application/json','X-Editor-Token':token},body:JSON.stringify(data)});const result=await response.json();if(!response.ok)throw Error(t(result.error));return result;}
 function render(data){
- const different=!state||state.document_id!==data.document_id||state.sheet!==data.sheet||state.index!==data.index;
+ const differentDocument=!state||state.document_id!==data.document_id||state.sheet!==data.sheet;
+ const different=differentDocument||state.index!==data.index;
  state=data;original=[...data.values];$('fields').replaceChildren();
- renderExamples();if(different){resetPreview();setSplit(data.layout_width||51);}$('output-label').textContent=data.output_file;
+ renderExamples();
+ if(different){
+  if(differentDocument){sourcePinned=false;resetPreview();}
+  else if(sourcePinned){
+   $('viewer-find').value=searchText();
+   if(pdfDoc)searchPDF().catch(previewError);else sendPreviewControls();
+  }else resetPreview();
+  setSplit(data.layout_width||51);
+ }
+ $('output-label').textContent=data.output_file;
  data.columns.filter(column=>column.mode==='edit').forEach(column=>{const i=column.index,name=columnLabel(data,column),box=document.createElement('div');box.className='field';const label=document.createElement('label');label.textContent=name;label.htmlFor='col-'+i;let input;
  if(column.choices.length){input=document.createElement('select');if(!column.choices.includes(data.values[i])){const current=document.createElement('option');current.value=data.values[i];current.textContent=data.values[i]||t('(пусто)');current.disabled=true;current.selected=true;input.append(current);}column.choices.forEach(value=>{const option=document.createElement('option');option.value=value;option.textContent=value;input.append(option);});}
  else input=document.createElement('textarea');
@@ -512,7 +566,7 @@ function render(data){
 }
 function previewReplacements(){const edited=values(),messages=[];state.headers.forEach((name,i)=>{name=columnLabel(state,state.columns[i]);if(edited[i]!==original[i]){const count=Math.max(0,(state.match_counts[String(i)]||0)-1);if(!state.cycle&&state.review_columns.includes(i)&&count)messages.push(name+t(': после сохранения открыть ')+count+t(' других совпадений для проверки.')+(original[i]===''?t(' Исходное значение пустое.'):''));else messages.push(name+t(': сохранить только в текущей строке.'));}});$('replacement-preview').hidden=!messages.length;$('replacement-preview').textContent=messages.join('\n');}
 function renderCycle(){const cycle=state.cycle;$('cycle-panel').hidden=!cycle;$('cycle-suggestions').replaceChildren();if(!cycle)return;$('cycle-title').textContent=t('Проверка совпадений: ')+(cycle.total-cycle.remaining+1)+' / '+cycle.total+t(' · начало со строки ')+(cycle.origin+1);cycle.suggestions.forEach(suggestion=>{const row=document.createElement('div');row.className='cycle-suggestion';const text=document.createElement('span');text.textContent=columnLabel(state,state.columns[suggestion.column])+': «'+(suggestion.old||t('(пусто)'))+'» → «'+(suggestion.new||t('(пусто)'))+'»';const button=document.createElement('button');button.textContent=t('Применить');button.title=t('Подставить предложенное значение в поле «')+suggestion.name+t('». Изменение сохранится при подтверждении строки.');button.onclick=()=>{const input=$('col-'+suggestion.column);if(input.tagName==='SELECT')input.value=suggestion.new;else setEditorText(input,suggestion.new);input.dispatchEvent(new Event('input'));button.textContent=t('Применено');};row.append(text,button);$('cycle-suggestions').append(row);});}
-async function autoOpen(){if($('auto').checked){if(state.links.length)loadPreview(state.links[0]);else $('viewer-status').textContent=t('В строке ссылок нет.');}}
+async function autoOpen(){if(sourcePinned)return;if($('auto').checked){if(state.links.length)loadPreview(state.links[0]);else setViewerStatus(t('В строке ссылок нет.'),true);}}
 async function run(action){if(busy)return;busy=true;$('editor').inert=true;try{await action();}catch(error){status(error.message,true);}finally{busy=false;$('editor').inert=false;}}
 function ask(){return new Promise(resolve=>{const dialog=$('unsaved');dialog.querySelectorAll('button').forEach(button=>{button.disabled=false;button.onclick=()=>{dialog.close();resolve(button.dataset.choice);};});dialog.oncancel=event=>{event.preventDefault();dialog.close();resolve('cancel');};dialog.showModal();});}
 async function save(advance=false){const before=state.index,hadCycle=!!state.cycle;const result=await api('save',{index:state.index,values:values(),revision:state.revision,next:advance});render(result);status(t(result.warning)||(t('Сохранено: ')+result.output_file+(result.cycle_finished?t(' · Цикл завершён. Возврат к основному проходу.'):result.cycle?t(' · Открыто следующее совпадение.'):advance&&before===state.index?t(' · Проход завершён.'):'')));if(before!==state.index||hadCycle||state.cycle)await autoOpen();}
@@ -536,7 +590,8 @@ document.addEventListener('keydown',event=>{if(busy||!state||!state.total)return
 window.addEventListener('beforeunload',event=>{if(dirty()){event.preventDefault();event.returnValue='';}});
 // Source loading runs separately from editing and saving.
 let sourceVersion=0,sourceController=null,sourceURL='',htmlSource=null,pdfDoc=null,pdfLib=null,pdfPageNumber=1,pdfMatches=[],pdfRenderTask=null,pdfRenderVersion=0,pdfSearchVersion=0,pdfLoadingTask=null,pdfQuery='';
-let sourceHistory=[],sourceHistoryIndex=-1,previewOrigin='',previewKey='';
+let sourceHistory=[],sourceHistoryIndex=-1,previewOrigin='',previewKey='',sourcePinned=false;
+let viewerNoticeSignature='',dismissedViewerNotice='';
 const compact=text=>text.toLocaleLowerCase().replace(/\s/g,'');
 function examplesText(){return state?state.values[state.search_column]||'':'';}
 function searchText(){return examplesText().split('|')[0].trim();}
@@ -544,20 +599,92 @@ function cellURLs(text,extra=[]){return [...new Set([...(text.match(/https?:\/\/
 function sourceAnchor(url){const link=document.createElement('a');link.href=url;link.textContent=t('Ссылка');link.onclick=event=>{event.preventDefault();loadPreview(url);};return link;}
 function appendCellText(container,text,extra=[]){const regex=/https?:\/\/[^\s<>"|]+/gi;let start=0;for(const match of text.matchAll(regex)){const url=match[0].replace(/[.,;\)\]\}]+$/,'');container.append(document.createTextNode(text.slice(start,match.index)),sourceAnchor(url),document.createTextNode(match[0].slice(url.length)));start=match.index+match[0].length;}container.append(document.createTextNode(text.slice(start)||(!text?'—':'')));extra.filter(url=>/^https?:\/\//i.test(url)&&!text.includes(url)).forEach(url=>container.append(' ',sourceAnchor(url)));}
 function renderExamples(){$('examples').replaceChildren();state.columns.filter(column=>column.mode==='read').forEach(column=>{const block=document.createElement('div');block.className='read-column';const label=document.createElement('strong');label.textContent=columnLabel(state,column);const text=document.createElement('div');appendCellText(text,state.values[column.index],state.cell_links[String(column.index)]||[]);block.append(label,text);$('examples').append(block);});}
-function resetPreview(keepHistory=false){if(!keepHistory){sourceHistory=[];sourceHistoryIndex=-1;}previewOrigin='';previewKey='';updateSourceHistory();sourceVersion++;sourceController?.abort();pdfRenderTask?.cancel();pdfRenderVersion++;pdfSearchVersion++;if(pdfLoadingTask)pdfLoadingTask.destroy().catch(()=>{});else pdfDoc?.destroy().catch(()=>{});pdfDoc=null;pdfLoadingTask=null;htmlSource=null;sourceURL='';$('external').disabled=true;$('source-frame').hidden=true;$('source-frame').srcdoc='';$('pdf-page').hidden=true;$('pdf-toolbar').hidden=true;$('viewer-find').value=searchText();$('viewer-status').textContent=t('Нажмите «Ссылка» в видимой колонке.');}
-async function loadPreview(url,historyMode='push'){resetPreview(true);if(historyMode==='push'&&sourceHistory[sourceHistoryIndex]!==url){sourceHistory=sourceHistory.slice(0,sourceHistoryIndex+1);sourceHistory.push(url);sourceHistoryIndex=sourceHistory.length-1;}updateSourceHistory();sourceURL=url;$('external').disabled=false;const version=sourceVersion;sourceController=new AbortController();$('viewer-status').textContent=t('Загрузка источника…');try{const response=await fetch('/api/source',{method:'POST',headers:{'Content-Type':'application/json','X-Editor-Token':token},body:JSON.stringify({index:state.index,url}),signal:sourceController.signal});if(!response.ok)throw Error(t((await response.json()).error));if(response.headers.get('Content-Type').includes('application/pdf')){const bytes=new Uint8Array(await response.arrayBuffer());if(version!==sourceVersion)return;await loadPDF(bytes,version);}else{const data=await response.json();if(version!==sourceVersion)return;htmlSource=data;showHTML();}}catch(error){if(version===sourceVersion&&error.name!=='AbortError')$('viewer-status').textContent=t('Не удалось показать источник: ')+error.message+t(' Можно открыть его кнопкой «В браузере». ');}}
+function setViewerStatus(text,notice=false){
+ $('viewer-status').textContent=text;
+ if(!sourceBrowserEnabled)return;
+ if(!notice){$('viewer-notice').hidden=true;dismissedViewerNotice='';return;}
+ const signature=sourceVersion+'|'+$('viewer-find').value+'|'+text;
+ const noMatch=text===t('Совпадение не найдено. Можно изменить текст поиска.');
+ $('viewer-notice').classList.toggle('no-match',noMatch);$('viewer-notice-title').hidden=!noMatch;
+ viewerNoticeSignature=signature;
+ $('viewer-notice-text').textContent=noMatch?t('Это не означает, что позиции нет на странице. Сайт может ограничивать автоматический поиск. Проверьте страницу и найдите нужную позицию вручную.'):text;
+ $('viewer-notice').hidden=!text||signature===dismissedViewerNotice;
+}
+$('viewer-notice-close').onclick=()=>{dismissedViewerNotice=viewerNoticeSignature;$('viewer-notice').hidden=true;};
+function updateSourceControls(){
+ $('source-reload').disabled=!sourceURL;
+ $('source-pin').disabled=!htmlSource&&!pdfDoc;
+ $('source-pin').setAttribute('aria-pressed',String(sourcePinned));
+ const label=t(sourcePinned?'Открепить страницу и следовать ссылкам строк':'Закрепить страницу при смене строк');
+ $('source-pin').title=label;$('source-pin').setAttribute('aria-label',label);
+}
+function resetPreview(keepHistory=false){
+ if(!keepHistory){sourceHistory=[];sourceHistoryIndex=-1;sourcePinned=false;}
+ previewOrigin='';previewKey='';updateSourceHistory();sourceVersion++;sourceController?.abort();
+ pdfRenderTask?.cancel();pdfRenderVersion++;pdfSearchVersion++;
+ if(pdfLoadingTask)pdfLoadingTask.destroy().catch(()=>{});else pdfDoc?.destroy().catch(()=>{});
+ pdfDoc=null;pdfLoadingTask=null;htmlSource=null;sourceURL='';
+ $('source-address').value='';$('external').disabled=true;
+ $('source-frame').hidden=true;$('source-frame').srcdoc='';$('pdf-page').hidden=true;$('pdf-toolbar').hidden=true;
+ $('viewer-find').value=searchText();setViewerStatus(t('Нажмите «Ссылка» в видимой колонке.'),true);
+ updateSourceControls();
+}
+async function loadPreview(url,historyMode='push',reload=false){
+ resetPreview(true);
+ if(historyMode==='push'&&sourceHistory[sourceHistoryIndex]!==url){
+  sourceHistory=sourceHistory.slice(0,sourceHistoryIndex+1);sourceHistory.push(url);sourceHistoryIndex=sourceHistory.length-1;
+ }
+ updateSourceHistory();sourceURL=url;$('source-address').value=url;$('external').disabled=false;updateSourceControls();
+ const version=sourceVersion;sourceController=new AbortController();setViewerStatus(t('Загрузка источника…'));
+ try{
+  const response=await fetch(sourceBrowserEnabled?'/api/browser-source':'/api/source',{
+   method:'POST',headers:{'Content-Type':'application/json','X-Editor-Token':token},
+   body:JSON.stringify({index:state?.index,url,reload}),signal:sourceController.signal});
+  if(!response.ok)throw Error(t((await response.json()).error));
+  if(sourceBrowserEnabled&&version===sourceVersion){
+   sourceURL=response.headers.get('Content-Location')||url;$('source-address').value=sourceURL;sourceHistory[sourceHistoryIndex]=sourceURL;
+  }
+  if(response.headers.get('Content-Type').includes('application/pdf')){
+   const bytes=new Uint8Array(await response.arrayBuffer());if(version!==sourceVersion)return;await loadPDF(bytes,version);
+  }else{
+   const data=await response.json();if(version!==sourceVersion)return;htmlSource=data;
+   if(sourceBrowserEnabled&&data.url){sourceURL=data.url;$('source-address').value=sourceURL;sourceHistory[sourceHistoryIndex]=sourceURL;}
+   showHTML();
+  }
+  if(version===sourceVersion)updateSourceControls();
+ }catch(error){
+  if(version===sourceVersion&&error.name!=='AbortError')setViewerStatus(t('Не удалось показать источник: ')+error.message+(sourceBrowserEnabled?'':t(' Можно открыть его кнопкой «В браузере». ')),true);
+ }
+}
+$('source-address-row').onsubmit=event=>{
+ event.preventDefault();if(!sourceBrowserEnabled)return;
+ try{
+  let address=$('source-address').value.trim();
+  if(!address||address.startsWith('//'))throw Error();
+  if(!/^[a-z][a-z\d+.-]*:/i.test(address)||/^[^/?#]+:\d+(?:[/?#]|$)/.test(address))address='https://'+address;
+  const parsed=new URL(address);
+  if(!['http:','https:'].includes(parsed.protocol)||!parsed.hostname||parsed.username||parsed.password)throw Error();
+  loadPreview(parsed.href);
+ }catch(error){setViewerStatus(t('Введите корректный адрес HTTP или HTTPS.'),true);}
+};
+$('source-reload').onclick=()=>{if(sourceBrowserEnabled&&sourceURL)loadPreview(sourceURL,'replace',true);};
+$('source-pin').onclick=()=>{
+ if(!sourceBrowserEnabled||(!htmlSource&&!pdfDoc))return;
+ sourcePinned=!sourcePinned;updateSourceControls();
+ if(!sourcePinned)autoOpen();
+};
 function highlightHTML(doc,query){const needle=compact(query);if(!needle)return 0;const walker=doc.createTreeWalker(doc.body,NodeFilter.SHOW_TEXT),entries=[];let text='',node;while(node=walker.nextNode()){if(node.parentElement.closest('script,style,noscript,svg,head'))continue;const positions=[];let normalized='';for(let i=0;i<node.data.length;i++){if(/\s/.test(node.data[i]))continue;const lower=node.data[i].toLocaleLowerCase();for(const char of lower){normalized+=char;positions.push(i);}}if(normalized.length)entries.push({node,positions,start:text.length,end:text.length+normalized.length});text+=normalized;}const matches=[];for(let start=0;(start=text.indexOf(needle,start))!==-1;start+=needle.length)matches.push({start,end:start+needle.length});for(const entry of entries){const segments=matches.filter(hit=>hit.start<entry.end&&hit.end>entry.start).map(hit=>({start:entry.positions[Math.max(hit.start,entry.start)-entry.start],end:entry.positions[Math.min(hit.end,entry.end)-entry.start-1]+1}));for(const segment of segments.reverse()){const range=doc.createRange();range.setStart(entry.node,segment.start);range.setEnd(entry.node,segment.end);const mark=doc.createElement('mark');mark.setAttribute('data-tsv-hit','');range.surroundContents(mark);}}return matches.length;}
 function sendPreviewControls(){if(previewOrigin&&previewKey)$('source-frame').contentWindow.postMessage({type:'ue-controls',key:previewKey,query:$('viewer-find').value,zoom:Number($('zoom').value)},previewOrigin);}
-function showHTML(){if(!htmlSource)return;const frame=$('source-frame');previewOrigin=new URL(htmlSource.preview_url).origin;previewKey=htmlSource.bridge_key;frame.onload=sendPreviewControls;frame.removeAttribute('srcdoc');frame.hidden=false;frame.src=htmlSource.preview_url;$('viewer-status').textContent=t('Страница загружается. Поиск и подсветка…');}
+function showHTML(){if(!htmlSource)return;const frame=$('source-frame');previewOrigin=new URL(htmlSource.preview_url).origin;previewKey=htmlSource.bridge_key;frame.onload=sendPreviewControls;frame.removeAttribute('srcdoc');frame.hidden=false;frame.src=htmlSource.preview_url;setViewerStatus(t('Страница загружается. Поиск и подсветка…'));}
 function updateSourceHistory(){$('source-back').disabled=sourceHistoryIndex<=0;$('source-forward').disabled=sourceHistoryIndex>=sourceHistory.length-1;}
 $('source-back').onclick=()=>{if(sourceHistoryIndex>0){sourceHistoryIndex--;loadPreview(sourceHistory[sourceHistoryIndex],'replace');}};
 $('source-forward').onclick=()=>{if(sourceHistoryIndex<sourceHistory.length-1){sourceHistoryIndex++;loadPreview(sourceHistory[sourceHistoryIndex],'replace');}};
-window.addEventListener('message',event=>{if(event.source!==$('source-frame').contentWindow||event.origin!==previewOrigin||event.data?.key!==previewKey)return;const message=event.data;if(message.type==='ue-ready')sendPreviewControls();else if(message.type==='ue-navigate'&&/^https?:\/\//i.test(message.url))loadPreview(message.url);else if(message.type==='ue-status')$('viewer-status').textContent=message.count?t('Найдено: ')+message.count+t(' · первое совпадение подсвечено.'):t('Совпадение не найдено. Можно изменить текст поиска.');});
-async function loadPDF(bytes,version){$('viewer-status').textContent=t('Загрузка PDF и поиск текста…');if(!pdfLib){pdfLib=await import('/assets/pdf.mjs?token='+token);pdfLib.GlobalWorkerOptions.workerSrc='/assets/pdf.worker.mjs?token='+token;}if(version!==sourceVersion)return;const task=pdfLib.getDocument({data:bytes,isEvalSupported:false});pdfLoadingTask=task;const doc=await task.promise;if(version!==sourceVersion){doc.destroy().catch(()=>{});return;}pdfDoc=doc;$('pdf-toolbar').hidden=false;pdfPageNumber=1;await searchPDF(version);}
+window.addEventListener('message',event=>{if(event.source!==$('source-frame').contentWindow||event.origin!==previewOrigin||event.data?.key!==previewKey)return;const message=event.data;if(message.type==='ue-ready')sendPreviewControls();else if(message.type==='ue-navigate'&&/^https?:\/\//i.test(message.url))loadPreview(message.url);else if(message.type==='ue-status')setViewerStatus(message.count?t('Найдено: ')+message.count+t(' · первое совпадение подсвечено.'):t('Совпадение не найдено. Можно изменить текст поиска.'),!message.count&&!!$('viewer-find').value.trim());});
+async function loadPDF(bytes,version){setViewerStatus(t('Загрузка PDF и поиск текста…'));if(!pdfLib){pdfLib=await import('/assets/pdf.mjs?token='+token);pdfLib.GlobalWorkerOptions.workerSrc='/assets/pdf.worker.mjs?token='+token;}if(version!==sourceVersion)return;const task=pdfLib.getDocument({data:bytes,isEvalSupported:false});pdfLoadingTask=task;const doc=await task.promise;if(version!==sourceVersion){doc.destroy().catch(()=>{});return;}pdfDoc=doc;$('pdf-toolbar').hidden=false;pdfPageNumber=1;await searchPDF(version);}
 function pdfTextMatches(items,query){const needle=compact(query);if(!needle)return[];let text='';const segments=items.filter(item=>typeof item.str==='string'&&compact(item.str)).map(item=>{const start=text.length;text+=compact(item.str);return{item,start,end:text.length};});const found=[];for(let start=0;(start=text.indexOf(needle,start))!==-1;start+=needle.length)found.push(segments.filter(segment=>segment.start<start+needle.length&&segment.end>start).map(segment=>segment.item));return found;}
-async function searchPDF(version=sourceVersion){const doc=pdfDoc,searchVersion=++pdfSearchVersion;if(!doc)return;pdfMatches=[];pdfQuery=$('viewer-find').value;let anyText=false;for(let number=1;number<=doc.numPages;number++){if(version!==sourceVersion||searchVersion!==pdfSearchVersion)return;$('viewer-status').textContent=t('Поиск в PDF: ')+number+' / '+doc.numPages;const page=await doc.getPage(number),content=await page.getTextContent();if(version!==sourceVersion||searchVersion!==pdfSearchVersion)return;anyText ||= content.items.some(item=>item.str?.trim());const matches=pdfTextMatches(content.items,pdfQuery);if(matches.length)pdfMatches.push({page:number,count:matches.length});}if(version!==sourceVersion||searchVersion!==pdfSearchVersion)return;pdfPageNumber=pdfMatches[0]?.page||1;await renderPDFPage();if(version!==sourceVersion||searchVersion!==pdfSearchVersion)return;$('viewer-status').textContent=pdfMatches.length?t('Найдено совпадений: ')+pdfMatches.reduce((total,page)=>total+page.count,0)+t(' на ')+pdfMatches.length+t(' страницах.'):anyText?t('Совпадение не найдено. Можно изменить текст поиска.'):t('В PDF нет текстового слоя. Автопоиск в скане недоступен.');}
+async function searchPDF(version=sourceVersion){const doc=pdfDoc,searchVersion=++pdfSearchVersion;if(!doc)return;pdfMatches=[];pdfQuery=$('viewer-find').value;let anyText=false;for(let number=1;number<=doc.numPages;number++){if(version!==sourceVersion||searchVersion!==pdfSearchVersion)return;setViewerStatus(t('Поиск в PDF: ')+number+' / '+doc.numPages);const page=await doc.getPage(number),content=await page.getTextContent();if(version!==sourceVersion||searchVersion!==pdfSearchVersion)return;anyText ||= content.items.some(item=>item.str?.trim());const matches=pdfTextMatches(content.items,pdfQuery);if(matches.length)pdfMatches.push({page:number,count:matches.length});}if(version!==sourceVersion||searchVersion!==pdfSearchVersion)return;pdfPageNumber=pdfMatches[0]?.page||1;await renderPDFPage();if(version!==sourceVersion||searchVersion!==pdfSearchVersion)return;setViewerStatus(pdfMatches.length?t('Найдено совпадений: ')+pdfMatches.reduce((total,page)=>total+page.count,0)+t(' на ')+pdfMatches.length+t(' страницах.'):anyText?t('Совпадение не найдено. Можно изменить текст поиска.'):t('В PDF нет текстового слоя. Автопоиск в скане недоступен.'),!pdfMatches.length&&!!pdfQuery.trim());}
 async function renderPDFPage(){const doc=pdfDoc;if(!doc)return;pdfRenderTask?.cancel();const version=sourceVersion,renderVersion=++pdfRenderVersion;const page=await doc.getPage(pdfPageNumber);if(version!==sourceVersion||renderVersion!==pdfRenderVersion)return;const scale=Number($('zoom').value),viewport=page.getViewport({scale}),canvas=$('pdf-canvas'),ratio=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.ceil(viewport.width*ratio);canvas.height=Math.ceil(viewport.height*ratio);canvas.style.width=viewport.width+'px';canvas.style.height=viewport.height+'px';$('pdf-page').style.width=viewport.width+'px';$('pdf-page').style.height=viewport.height+'px';$('pdf-page').hidden=false;$('pdf-highlights').replaceChildren();pdfRenderTask=page.render({canvasContext:canvas.getContext('2d'),viewport,transform:ratio===1?null:[ratio,0,0,ratio,0,0]});try{await pdfRenderTask.promise;}catch(error){if(error.name==='RenderingCancelledException')return;throw error;}if(version!==sourceVersion||renderVersion!==pdfRenderVersion)return;const content=await page.getTextContent();if(version!==sourceVersion||renderVersion!==pdfRenderVersion)return;const matches=pdfTextMatches(content.items,pdfQuery);for(const item of new Set(matches.flat())){const matrix=pdfLib.Util.transform(viewport.transform,item.transform),height=Math.hypot(matrix[2],matrix[3])||item.height*scale;const mark=document.createElement('div');mark.className='pdf-hit';mark.style.left=matrix[4]+'px';mark.style.top=(matrix[5]-height)+'px';mark.style.width=Math.max(item.width*scale,3)+'px';mark.style.height=height+'px';$('pdf-highlights').append(mark);}$('pdf-position').textContent=pdfPageNumber+' / '+doc.numPages;$('pdf-prev').disabled=pdfPageNumber<=1;$('pdf-next').disabled=pdfPageNumber>=doc.numPages;$('match-prev').disabled=!pdfMatches.some(match=>match.page<pdfPageNumber);$('match-next').disabled=!pdfMatches.some(match=>match.page>pdfPageNumber);$('source-scroll').scrollTop=0;$('pdf-highlights').firstElementChild?.scrollIntoView({block:'center'});}
-function previewError(error){if(error.name!=='RenderingCancelledException')$('viewer-status').textContent=error.message;}
+function previewError(error){if(error.name!=='RenderingCancelledException')setViewerStatus(error.message,true);}
 function changeZoom(){if(pdfDoc)renderPDFPage().catch(previewError);else sendPreviewControls();}
 $('zoom').onchange=changeZoom;$('zoom-out').onclick=()=>{const input=$('zoom');input.selectedIndex=Math.max(0,input.selectedIndex-1);changeZoom();};$('zoom-in').onclick=()=>{const input=$('zoom');input.selectedIndex=Math.min(input.options.length-1,input.selectedIndex+1);changeZoom();};
 $('external').onclick=()=>{if(sourceURL)window.open(sourceURL,'_blank','noopener');};$('find').onclick=()=>{if(pdfDoc)searchPDF().catch(previewError);else sendPreviewControls();};$('viewer-find').onkeydown=event=>{if(event.key==='Enter')$('find').click();};
@@ -673,6 +800,7 @@ function applyStaticLanguage(){
   if(node.isConnected)node.data=prefix+t(key)+suffix;
  }
  for(const {node,attribute,key} of localizedAttributes)node.setAttribute(attribute,t(key));
+ updateSourceControls();
  for(const id of ['language-toggle','wizard-language-toggle']){
   const button=$(id);button.textContent=language==='ru'?'En':'Рус';
   button.setAttribute('aria-label',language==='ru'?'Switch to English':'Переключить на русский');
@@ -685,7 +813,7 @@ function switchLanguage(){
  const previous=language,focused=document.activeElement;
  const focusId=focused?.id,selection=focused?.tagName==='TEXTAREA'?{start:focused.selectionStart,end:focused.selectionEnd,direction:focused.selectionDirection}:null;
  const drafts=state?values():null;
- const messages=['status','viewer-status','wizard-error','wizard-busy'].map(id=>[id,$(id).textContent]);
+ const messages=['status','viewer-status','viewer-notice-text','wizard-error','wizard-busy'].map(id=>[id,$(id).textContent]);
  const jump=$('jump').value,scroll=$('editor').scrollTop;
  language=language==='ru'?'en':'ru';applyStaticLanguage();
  if(state){
