@@ -573,6 +573,11 @@ async function save(advance=false){const before=state.index,hadCycle=!!state.cyc
 async function leave(){if(!dirty())return true;const before=state.index,choice=await ask();if(choice==='cancel')return false;if(choice==='save'){await save(false);if(state.cycle||state.index!==before)return false;}return true;}
 async function navigate(index){if(state.cycle||!state.total||index===null||index<0||index>=state.total||index===state.index)return;if(!await leave())return;render(await api('row',{index}));status('');await autoOpen();}
 $('prev').onclick=()=>run(()=>navigate(state.prev_index));$('next').onclick=()=>run(()=>navigate(state.next_index));$('go').onclick=()=>run(async()=>{const index=Number($('jump').value)-1;if(!Number.isInteger(index)||index<0||index>=state.total)throw Error(t('Введите номер от 1 до ')+state.total);await navigate(index);});
+$('jump').addEventListener('keydown',event=>{
+ if(event.key!=='Enter'||event.isComposing||event.ctrlKey||event.metaKey||event.altKey)return;
+ event.preventDefault();
+ if(state&&!busy&&!$('go').disabled)$('go').click();
+});
 $('save').onclick=()=>run(()=>save());$('confirm').onclick=()=>run(()=>save(true));
 async function skipRow(){const index=state.index;if(dirty()&&state.cycle){const choice=await ask();if(choice==='cancel')return;if(choice==='save'){await save(true);return;}}else if(!await leave())return;const result=await api('skip',{index,revision:state.revision,skip:true,next:true});render(result);status(t('Строка ')+(index+1)+t(' добавлена в пропущенные.')+(result.cycle_finished?t(' Цикл завершён.'):''));if(result.index!==index)await autoOpen();}
 $('skip').onclick=()=>run(skipRow);

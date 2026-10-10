@@ -78,7 +78,7 @@ XLS/XLSB conversion transfers sheet contents; original formatting, formulas, and
 
 ## Edit and review rows
 
-- The confirm button saves the row and moves forward. **Save** saves without moving forward unless a matching-value review is active. Keyboard shortcuts: Ctrl+Enter to confirm; Alt+↑/↓ to navigate.
+- The confirm button saves the row and moves forward. **Save** saves without moving forward unless a matching-value review is active. Keyboard shortcuts: Ctrl+Enter to confirm; Alt+↑/↓ to navigate; Enter in the row-number field to jump to that row.
 - **Skip** postpones a row. **Skipped** provides quick navigation to postponed rows. Confirming a row removes its skipped status.
 - Text fields display a visual line break after `;`. This is not written to the file; original spaces and actual line breaks are preserved.
 - Changing a value in a column marked for matching-value review starts a sequential review of other rows with exactly the same old value. **Apply** places the suggested value in the field. You can keep the previous value and edit other fields instead. Each row is saved separately; changes are not applied in bulk.
