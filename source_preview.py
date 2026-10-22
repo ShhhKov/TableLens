@@ -11,6 +11,22 @@ from pathlib import Path
 from urllib.parse import urlsplit, urljoin, urldefrag, parse_qs, quote
 from urllib.request import Request, urlopen
 
+# Consent banners cannot store a choice from the local preview origin, so their
+# buttons do nothing. Hide the common ones and undo the scroll lock they add.
+CONSENT_BANNERS = ','.join((
+    '#onetrust-consent-sdk', '[id^="sp_message_container_"]', '#didomi-host',
+    '#CybotCookiebotDialog', '#CybotCookiebotDialogBodyUnderlay', '#qc-cmp2-container',
+    '#usercentrics-root', '#usercentrics-cmp-ui', '#truste-consent-track', '#consent_blackbar',
+    '.truste_box_overlay', '.cky-consent-container', '.cky-overlay', '.osano-cm-window',
+    '#cmplz-cookiebanner-container', '#iubenda-cs-banner', '#BorlabsCookieBox', '.fc-consent-root',
+    '#ngasCookiePrompt', '#cookiePrompt', '.consent-app', '#cookiescript_injected',
+    '#moove_gdpr_cookie_info_bar', '#cookie-law-info-bar', '.cc-window', '.cookie-notice-container'))
+CONSENT_STYLE = ('<style>' + CONSENT_BANNERS + '{display:none!important}'
+                 'html.sp-message-open,html.didomi-popup-open,body.didomi-popup-open,'
+                 'body.ot-overflow-hidden,body.body_state-auth-popup_opened,'
+                 'html.qc-cmp-ui-showing,body.qc-cmp-ui-showing{overflow:auto!important;position:static!important}'
+                 '</style>')
+
 
 class SourcePreview:
     def __init__(self):
@@ -121,6 +137,7 @@ class SourcePreview:
             if base_parsed.netloc != parsed.netloc:
                 mapped_base = base_url
             injected = '<base href="'+html.escape(mapped_base, quote=True)+'">'
+            injected += CONSENT_STYLE
             injected += '<script>window.__uePreview='+json.dumps(settings, ensure_ascii=True).replace('<','\\u003c')+';</script><script>'+self.bridge+'</script>'
             if re.search(r'<head\b[^>]*>', content, re.I):
                 content = re.sub(r'(<head\b[^>]*>)', lambda match: match[0]+injected, content, count=1, flags=re.I)

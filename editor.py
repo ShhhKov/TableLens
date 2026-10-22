@@ -486,8 +486,22 @@ class Editor:
                 os.unlink(name)
 
 
+BLOCKED_SOURCE = ('Сайт сбросил соединение: похоже, он заблокирован у вашего провайдера. '
+                  'Включите VPN для всей системы, а не только для браузера.')
+
+
 @lru_cache(maxsize=8)
 def fetch_source(url):
+    try:
+        return download_source(url)
+    except OSError as error:
+        # DPI blocking shows up as a reset or a cut TLS handshake, not an HTTP error.
+        if isinstance(getattr(error, 'reason', error), (ConnectionResetError, ssl.SSLEOFError)):
+            raise ValueError(BLOCKED_SOURCE) from None
+        raise
+
+
+def download_source(url):
     request = Request(url, headers={'User-Agent': 'Mozilla/5.0 TableLens', 'Accept-Encoding': 'identity'})
     try:
         from pip._vendor import certifi
