@@ -52,7 +52,7 @@ Settings are saved per file and sheet and can be changed later with **Columns**.
 
 ## View sources
 
-Links in visible columns, including Excel/ODS hyperlinks, open in the right pane. Read-only fields show URLs as **Link**. Automatic preview can be turned off.
+Links in visible columns, including Excel/ODS hyperlinks, open in the right pane. Addresses without `https://` are recognized too: `www.site.org` always, and bare domains like `google.com` or `ozon.ru/item/1` when the zone is a common one (com, ru, org, net, рф and others), so file names such as `file.txt` stay plain text. Read-only fields show URLs as **Link**. Automatic preview can be turned off.
 
 - **Address bar**: enter an HTTP/HTTPS address or a site name to open any page, even if the table has no link column. Back, forward, and reload work as in a browser; the bar shows the final address after redirects.
 - **Pin**: keeps the current page or PDF while you switch rows; the search updates for each new row. Clicking a table link still opens that link. The pin is cleared when you open another document or sheet.

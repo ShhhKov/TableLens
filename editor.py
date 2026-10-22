@@ -31,7 +31,23 @@ from table_formats import TableFile, SUPPORTED
 
 from source_preview import SourcePreview
 
-URL = re.compile(r'https?://[^\s<>"|]+', re.IGNORECASE)
+# Ссылки с http(s):// или голые адреса вроде www.site.ru и google.com/page. Голый домен
+# считается ссылкой только с известной зоной, чтобы file.txt, v1.2 и почта оставались текстом.
+# Шаблон совместим с JavaScript и передаётся в editor.html как есть.
+_LETTER = r'a-z\d\u0400-\u04ff'
+_LABEL = rf'[{_LETTER}](?:[{_LETTER}-]*[{_LETTER}])?'
+_ZONES = ('com|ru|org|net|info|biz|io|su|рф|рус|ua|by|kz|uz|am|ge|kg|me|co|uk|de|fr|eu|us|it|es|nl'
+          '|ch|at|jp|cn|ca|au|app|dev|ai|edu|gov|pro|online|site|shop|store|tech|tv|xyz|ws|top|ltd')
+URL_PATTERN = (rf'https?://[^\s<>"|]+|(?<![{_LETTER}_@./:-])(?:www\.{_LABEL}(?:\.{_LABEL})+|(?:{_LABEL}\.)+(?:{_ZONES}))'
+               rf'(?![{_LETTER}_@-]|\.[{_LETTER}])(?::\d{{1,5}})?(?:[/?#][^\s<>"|]*)?')
+URL = re.compile(URL_PATTERN, re.IGNORECASE)
+
+
+def find_urls(text):
+    return [url if re.match(r'https?://', url, re.IGNORECASE) else 'https://' + url
+            for url in (match.rstrip('.,;)]}') for match in URL.findall(text))]
+
+
 ACTIONS = ('approve', 'reject', 'rewiev')
 
 
@@ -226,7 +242,7 @@ class Editor:
         values = self.rows[index] if self.rows else []
         values = values + [''] * (len(self.headers) - len(values))
         visible_values = [value for column, value in zip(self.columns, values) if column['mode'] != 'hidden']
-        links = list(dict.fromkeys(match.rstrip('.,;)]}') for value in visible_values for match in URL.findall(value)))
+        links = list(dict.fromkeys(url for value in visible_values for url in find_urls(value)))
         for column in self.columns:
             if column['mode'] != 'hidden':
                 for link in self.table.links.get((index, column['index']), []):
@@ -550,7 +566,8 @@ def main():
     html = ((folder / 'editor.html').read_text(encoding='utf-8')
             .replace('__TOKEN__', token).replace('__SYSTEM_LANGUAGE__', system_language())
             .replace('__SYSTEM_THEME__', system_theme())
-            .replace('__SOURCE_BROWSER_ENABLED__', 'true'))
+            .replace('__SOURCE_BROWSER_ENABLED__', 'true')
+            .replace('__URL_PATTERN__', json.dumps(URL_PATTERN)))
     editor_lock = threading.RLock()
     preview = SourcePreview()
 
