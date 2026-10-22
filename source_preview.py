@@ -138,7 +138,7 @@ class SourcePreview:
             context = ssl.create_default_context(cafile=certifi.where())
         except ImportError:
             context = ssl.create_default_context()
-        request = Request(url, headers={'User-Agent': 'Mozilla/5.0 Universal-Editor', 'Accept-Encoding': 'identity'})
+        request = Request(url, headers={'User-Agent': 'Mozilla/5.0 TableLens', 'Accept-Encoding': 'identity'})
         # A blocked third-party widget must not stall the document parser forever.
         with urlopen(request, timeout=8, context=context) as response:
             raw = response.read(40_000_001)

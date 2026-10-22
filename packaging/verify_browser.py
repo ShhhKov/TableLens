@@ -129,59 +129,50 @@ def main():
             targets=json.load(urlopen(f'http://127.0.0.1:{port}/json'))
             client=CDP(next(item['webSocketDebuggerUrl'] for item in targets if item['type']=='page'))
             client.call('Page.enable');client.call('Runtime.enable')
-            for universal in (False,True):
-                path=folder/('universal.csv' if universal else 'classic.tsv')
-                with path.open('w',newline='',encoding='utf-8') as stream:
-                    writer=csv.writer(stream,delimiter=',' if universal else '\t')
-                    writer.writerow(['Name','URL'] if universal else ['action','proposed_name','category','distinguishing','aliases','examples','key'])
-                    writer.writerow(['Target',f'http://127.0.0.1:{fixture.server_port}/ || https://nevrolog-gomel.by/price/'] if universal else ['approve','Target','cat','detail','a; b',f'Target | Org | http://127.0.0.1:{fixture.server_port}/ || Target | Org | https://nevrolog-gomel.by/price/','key'])
-                cmd=([str(ROOT/'Launch.sh'),'--no-browser'] if universal else [str(ROOT/'runtime/linux-x64/python/bin/python3'),'-B',str(ROOT.parent/'tsv_editor.py'),'--no-browser'])
-                if universal:
-                    cmd+=['--storage-dir',str(folder/'storage')]
-                else:
-                    cmd.append(str(path))
-                app=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-                try:
-                    line=app.stdout.readline();address=re.search(r'http://\S+',line).group(0)
-                    client.call('Page.navigate',{'url':address})
-                    if universal:
-                        client.wait("document.querySelector('#file-wizard')?.open")
-                        root=client.call('DOM.getDocument')['root']['nodeId']
-                        node=client.call('DOM.querySelector',{'nodeId':root,'selector':'#file-input'})['nodeId']
-                        client.call('DOM.setFileInputFiles',{'nodeId':node,'files':[str(path)]})
-                        client.wait("!document.querySelector('#wizard-config').hidden&&!document.querySelector('#wizard-start').disabled")
-                        client.evaluate("document.querySelector('#wizard-start').click()")
-                    client.wait("document.querySelector('#viewer-status').textContent.includes('Найдено:')")
-                    client.wait("getComputedStyle(document.body).backgroundColor==='rgb(12, 34, 56)'",frame=True)
-                    assert client.evaluate("document.querySelector('#panel').hidden",frame=True)
-                    client.evaluate("document.querySelector('#toggle').click()",frame=True)
-                    assert not client.evaluate("document.querySelector('#panel').hidden",frame=True)
-                    client.evaluate("document.querySelector('#link').click()",frame=True)
-                    client.wait("!!document.querySelector('#next-page')",frame=True)
-                    assert len([item for item in json.load(urlopen(f'http://127.0.0.1:{port}/json')) if item['type']=='page'])==1
-                    client.evaluate("document.querySelector('#source-back').click()")
-                    client.wait("!!document.querySelector('#toggle')",frame=True)
-                    client.wait("getComputedStyle(document.body).backgroundColor==='rgb(12, 34, 56)'",frame=True)
-                    print(('Universal' if universal else 'Classic')+': CSS preload, collapse, in-panel navigation, back, highlighting OK',flush=True)
-                    if universal:
-                        client.evaluate("setEditorText(document.querySelector('#col-0'),'Changed');document.querySelector('#col-0').dispatchEvent(new Event('input'));document.querySelector('#save').click()")
-                        client.wait("!document.querySelector('#download').disabled")
-                        assert path.read_text().find('Changed')==-1
-                        print('Universal: upload, column setup and saving copy OK',flush=True)
-                    if '--live' in sys.argv:
-                        client.evaluate("loadPreview('https://nevrolog-gomel.by/price/')")
-                        client.wait("previewOrigin&&sourceURL.includes('nevrolog-gomel.by')",timeout=45)
-                        time.sleep(3)
-                        client.wait("window.__uePreview?.remoteOrigin?.includes('nevrolog-gomel.by')&&!!document.body",frame=True,timeout=60)
-                        client.wait("document.styleSheets.length>0",frame=True,timeout=30)
-                        fonts=client.evaluate("({font:getComputedStyle(document.body).fontFamily,styles:document.styleSheets.length})",frame=True)
-                        assert fonts['styles']>0 and 'Times New Roman' not in fonts['font']
-                        print(('Universal' if universal else 'Classic')+': live clinic CSS loaded '+str(fonts),flush=True)
-                        if universal:
-                            screenshot=client.call('Page.captureScreenshot',{'format':'png'})['data']
-                            (ROOT/'packaging'/'live-source.png').write_bytes(base64.b64decode(screenshot))
-                finally:
-                    app.terminate();app.wait(timeout=10)
+            path=folder/'sample.csv'
+            with path.open('w',newline='',encoding='utf-8') as stream:
+                writer=csv.writer(stream)
+                writer.writerow(['Name','URL'])
+                writer.writerow(['Target',f'http://127.0.0.1:{fixture.server_port}/ || https://nevrolog-gomel.by/price/'])
+            app=subprocess.Popen([str(ROOT/'Launch.sh'),'--no-browser','--storage-dir',str(folder/'storage')],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+            try:
+                line=app.stdout.readline();address=re.search(r'http://\S+',line).group(0)
+                client.call('Page.navigate',{'url':address})
+                client.wait("document.querySelector('#file-wizard')?.open")
+                root=client.call('DOM.getDocument')['root']['nodeId']
+                node=client.call('DOM.querySelector',{'nodeId':root,'selector':'#file-input'})['nodeId']
+                client.call('DOM.setFileInputFiles',{'nodeId':node,'files':[str(path)]})
+                client.wait("!document.querySelector('#wizard-config').hidden&&!document.querySelector('#wizard-start').disabled")
+                client.evaluate("document.querySelector('#wizard-start').click()")
+                client.wait("document.querySelector('#viewer-status').textContent.includes('Найдено:')")
+                client.wait("getComputedStyle(document.body).backgroundColor==='rgb(12, 34, 56)'",frame=True)
+                assert client.evaluate("document.querySelector('#panel').hidden",frame=True)
+                client.evaluate("document.querySelector('#toggle').click()",frame=True)
+                assert not client.evaluate("document.querySelector('#panel').hidden",frame=True)
+                client.evaluate("document.querySelector('#link').click()",frame=True)
+                client.wait("!!document.querySelector('#next-page')",frame=True)
+                assert len([item for item in json.load(urlopen(f'http://127.0.0.1:{port}/json')) if item['type']=='page'])==1
+                client.evaluate("document.querySelector('#source-back').click()")
+                client.wait("!!document.querySelector('#toggle')",frame=True)
+                client.wait("getComputedStyle(document.body).backgroundColor==='rgb(12, 34, 56)'",frame=True)
+                print('CSS preload, collapse, in-panel navigation, back, highlighting OK',flush=True)
+                client.evaluate("setEditorText(document.querySelector('#col-0'),'Changed');document.querySelector('#col-0').dispatchEvent(new Event('input'));document.querySelector('#save').click()")
+                client.wait("!document.querySelector('#download').disabled")
+                assert path.read_text().find('Changed')==-1
+                print('Upload, column setup and saving copy OK',flush=True)
+                if '--live' in sys.argv:
+                    client.evaluate("loadPreview('https://nevrolog-gomel.by/price/')")
+                    client.wait("previewOrigin&&sourceURL.includes('nevrolog-gomel.by')",timeout=45)
+                    time.sleep(3)
+                    client.wait("window.__uePreview?.remoteOrigin?.includes('nevrolog-gomel.by')&&!!document.body",frame=True,timeout=60)
+                    client.wait("document.styleSheets.length>0",frame=True,timeout=30)
+                    fonts=client.evaluate("({font:getComputedStyle(document.body).fontFamily,styles:document.styleSheets.length})",frame=True)
+                    assert fonts['styles']>0 and 'Times New Roman' not in fonts['font']
+                    print('Live clinic CSS loaded '+str(fonts),flush=True)
+                    screenshot=client.call('Page.captureScreenshot',{'format':'png'})['data']
+                    (ROOT/'packaging'/'live-source.png').write_bytes(base64.b64decode(screenshot))
+            finally:
+                app.terminate();app.wait(timeout=10)
         finally:
             os.killpg(chrome.pid,signal.SIGTERM);chrome.wait(timeout=10);time.sleep(.4)
     fixture.shutdown();fixture.server_close()

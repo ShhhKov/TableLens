@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Local, sequential TSV editor. Python standard library only."""
+"""TableLens: local spreadsheet editor with source preview."""
 import argparse
 import csv
 import base64
@@ -472,7 +472,7 @@ class Editor:
 
 @lru_cache(maxsize=8)
 def fetch_source(url):
-    request = Request(url, headers={'User-Agent': 'Mozilla/5.0 Universal-Editor', 'Accept-Encoding': 'identity'})
+    request = Request(url, headers={'User-Agent': 'Mozilla/5.0 TableLens', 'Accept-Encoding': 'identity'})
     try:
         from pip._vendor import certifi
         context = ssl.create_default_context(cafile=certifi.where())
