@@ -57,7 +57,9 @@ Links in visible columns, including Excel/ODS hyperlinks, open in the right pane
 - **Address bar**: enter an HTTP/HTTPS address or a site name to open any page, even if the table has no link column. Back, forward, and reload work as in a browser; the bar shows the final address after redirects.
 - **Pin**: keeps the current page or PDF while you switch rows; the search updates for each new row. Clicking a table link still opens that link. The pin is cleared when you open another document or sheet.
 - **Search** uses the selected column's text before the first `|`, ignoring case and whitespace. You can edit the query. Matches are highlighted and the first one is scrolled into view; for PDFs you can jump between pages with matches. If nothing is found, a notice reminds you to check the page manually — sites may limit automatic search.
-- Zoom: 50–300%. Drag the divider to resize the panes; double-click it to reset.
+- Zoom: 50–300%. Ctrl + mouse wheel over the preview zooms around the cursor.
+- **Hand** (button next to zoom): drag the page or PDF with the mouse to see parts that do not fit, and zoom with the plain mouse wheel. A click without dragging still follows links.
+- Drag the divider to resize the panes; double-click it to reset.
 
 HTML pages keep their styles and scripts and run on a separate local address, isolated from the editor. Limitations: sources up to 40 MB; PDFs without a text layer cannot be searched; POST forms are not submitted; sites that require sign-in or block automated requests may work partially — open them in your browser from the address bar.
 
